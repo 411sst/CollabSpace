@@ -5,24 +5,25 @@ const csv = require('csv-parser');
 const fs = require('fs');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 
 const app = express();
-const port = 3000;
+const port = process.env.ADMIN_PORT || 3000;
 
 // Database connection
 const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root', 
-  password: '25102004', 
-  database: 'dbms_project' 
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME || 'dbms_project'
 });
 
 // Email transporter setup
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: process.env.EMAIL_SERVICE || 'gmail',
   auth: {
-    user: 'groupes.edu@gmail.com',    
-    pass: 'uymi xswo zlya qxyr'        
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD
   }
 });
 
@@ -57,7 +58,7 @@ const validateIdFormat = (id, table) => {
 
 const sendPasswordEmail = async (email, password, isTeacher = false) => {
   const mailOptions = {
-    from: 'your-email@gmail.com',    // Replace with your Gmail
+    from: process.env.EMAIL_USER,
     to: email,
     subject: 'Your Password Information',
     text: `Your ${isTeacher ? 'teacher' : 'student'} account password is: ${password}\n\nPlease keep this information secure.`,

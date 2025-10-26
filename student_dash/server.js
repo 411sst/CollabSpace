@@ -1,11 +1,13 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+
 const app = express();
-const PORT = 3001;
+const PORT = process.env.STUDENT_PORT || 3001;
 
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: process.env.STUDENT_FRONTEND_URL || 'http://localhost:3000',
     methods: ['GET', 'POST'],
     credentials: true
 }));
@@ -13,10 +15,10 @@ app.use(cors({
 app.use(express.json());
 
 const db = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: '25102004',
-    database: 'dbms_project',
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME || 'dbms_project',
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
@@ -47,7 +49,7 @@ app.get('/student/assignments', async (req, res) => {
             WHERE ac.class = ?
             ORDER BY a.deadline ASC;`;
 
-        const [assignments] = await db.execute(query, ['M']);  // section is harcoded for now, should be directed from login page
+        const [assignments] = await db.execute(query, [process.env.DEFAULT_STUDENT_CLASS || 'M']);  // TODO: Get from authentication
 
         if (!assignments.length) {
             return res.status(404).json({ 
@@ -84,7 +86,7 @@ app.get('/student/assignments/:assignmentId', async (req, res) => {
             JOIN Teacher AS t ON a.teacher_id = t.teacher_id
             WHERE a.assignment_id = ? AND ac.class = ?`;
 
-        const [assignment] = await db.execute(query, [assignmentId, 'M']); 
+        const [assignment] = await db.execute(query, [assignmentId, process.env.DEFAULT_STUDENT_CLASS || 'M']); 
 
         if (!assignment.length) {
             return res.status(404).json({ 

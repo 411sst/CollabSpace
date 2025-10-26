@@ -15,6 +15,28 @@
 
 grouPES is a comprehensive web-based platform designed to streamline team formation and assignment management in educational environments. The system features three role-based dashboards (Admin, Teacher, and Student) with real-time collaboration tools, drag-and-drop group management, and automated email notifications.
 
+## Architecture
+
+**IMPORTANT:** This repository contains TWO sets of applications:
+
+### 1. Main Integrated Application (RECOMMENDED)
+**Location:** `/src` (Uses Vite)
+- **Single application** with all features integrated
+- Full authentication system with role-based routing
+- Admin, Teacher, and Student dashboards all in one app
+- Modern React with hooks and context API
+- Runs on `http://localhost:5173`
+
+### 2. Standalone Dashboard Utilities
+**Location:** `admin_dash/front`, `teacher_dash/front`, `student_dash/front` (Uses Create React App)
+- **Separate simple apps** for specific administrative tasks
+- Admin Dashboard: CSV upload, password management, database reset
+- Teacher Dashboard: Assignment CRUD operations only
+- Student Dashboard: Assignment viewing only
+- Useful for testing or standalone administrative tools
+
+**For most users, you should use the Main Integrated Application in `/src`.**
+
 ## Features
 
 ### Admin Dashboard
@@ -109,25 +131,49 @@ mysql -u root -p dbms_project < DB_template.sql
 
 ### 2. Environment Configuration
 
-Create a `.env` file in the root directory:
+**CRITICAL:** Create a `.env` file in the root directory. Copy from `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` with your actual credentials:
 
 ```env
 # Database Configuration
 DB_HOST=localhost
 DB_USER=root
-DB_PASSWORD=your_password
+DB_PASSWORD=your_actual_database_password
 DB_NAME=dbms_project
 
-# Email Configuration (for Admin Dashboard)
+# Email Configuration (Gmail App Password)
+# Generate app password: https://myaccount.google.com/apppasswords
 EMAIL_SERVICE=gmail
 EMAIL_USER=your_email@gmail.com
-EMAIL_PASSWORD=your_app_password
+EMAIL_PASSWORD=your_gmail_app_password
 
 # Server Ports
+MAIN_PORT=3000
 ADMIN_PORT=3000
 TEACHER_PORT=5000
 STUDENT_PORT=3001
+
+# Application URLs (for CORS)
+FRONTEND_URL=http://localhost:5173
+ADMIN_FRONTEND_URL=http://localhost:3000
+TEACHER_FRONTEND_URL=http://localhost:3000
+STUDENT_FRONTEND_URL=http://localhost:3000
+
+# For testing only (remove in production with proper authentication)
+DEFAULT_TEACHER_ID=PES4UG19CS118
+DEFAULT_STUDENT_CLASS=M
 ```
+
+**Important Notes:**
+- Never commit the `.env` file to version control
+- For Gmail, you need to generate an "App Password" (not your regular password)
+- Visit: https://myaccount.google.com/apppasswords to create one
+- The `.env` file is already in `.gitignore` to prevent accidental commits
 
 ### 3. Install Dependencies
 
@@ -153,13 +199,32 @@ cd ../..
 
 ### 4. Running the Application
 
-#### Main Application (Vite)
+#### Option A: Main Integrated Application (RECOMMENDED)
+
+This is the primary application with full authentication and all features:
+
 ```bash
+# Start the Vite dev server
 npm run dev
 # Runs on http://localhost:5173
+
+# In a separate terminal, start the backend
+node src/server.cjs
+# Runs on http://localhost:3000
 ```
 
-#### Admin Dashboard
+Then open your browser to `http://localhost:5173` and you'll have access to:
+- Login/Register pages
+- Admin Dashboard (`/admin` route)
+- Teacher Dashboard (`/teacher` route)
+- Student Dashboard (`/assignment` route)
+- Group Management (`/groups` route)
+
+#### Option B: Standalone Dashboard Utilities (Optional)
+
+These are simpler standalone apps for specific administrative tasks:
+
+**Admin Dashboard** (CSV upload, password management):
 ```bash
 # Terminal 1 - Backend
 cd admin_dash
@@ -170,7 +235,7 @@ cd admin_dash/front
 npm start
 ```
 
-#### Teacher Dashboard
+**Teacher Dashboard** (Assignment CRUD only):
 ```bash
 # Terminal 1 - Backend
 cd teacher_dash
@@ -181,7 +246,7 @@ cd teacher_dash/front
 npm start
 ```
 
-#### Student Dashboard
+**Student Dashboard** (Assignment viewing only):
 ```bash
 # Terminal 1 - Backend
 cd student_dash
@@ -247,13 +312,16 @@ See `DB_template.sql` for complete schema details including triggers and constra
 
 **IMPORTANT:** Before deploying to production:
 
-1. **Move database credentials to environment variables** - Currently hardcoded in server files
-2. **Remove or secure sample data** - `Student.csv` and `Teacher.csv` contain example records
-3. **Enable HTTPS** - Configure SSL certificates for production
-4. **Update CORS settings** - Restrict allowed origins in server configurations
-5. **Secure email credentials** - Use environment variables for nodemailer configuration
-6. **Implement rate limiting** - Add middleware to prevent API abuse
-7. **Validate all user inputs** - Add proper sanitization and validation
+1. ✅ **Environment variables implemented** - All credentials now use `.env` file
+2. **Verify .env security** - Ensure `.env` is never committed (already in .gitignore)
+3. **Remove sample data** - `Student.csv` and `Teacher.csv` contain example records
+4. **Enable HTTPS** - Configure SSL certificates for production
+5. **Update CORS settings** - Restrict allowed origins in server configurations
+6. **Remove hardcoded test IDs** - Replace `DEFAULT_TEACHER_ID` and `DEFAULT_STUDENT_CLASS` with proper authentication
+7. **Implement rate limiting** - Add middleware to prevent API abuse
+8. **Validate all user inputs** - Add proper sanitization and validation
+9. **Use secure session management** - Implement JWT or session tokens properly
+10. **Database connection pooling** - Already implemented in student_dash, consider for others
 
 ## Contributing
 
@@ -264,9 +332,12 @@ See `DB_template.sql` for complete schema details including triggers and constra
 
 ## Known Issues
 
-- Hardcoded teacher ID in `teacher_dash/server.js` - needs dynamic authentication
-- Hardcoded class identifier in `student_dash/server.js` - should be user-specific
-- Database credentials exposed in source files - migrate to `.env`
+- ✅ ~~Database credentials exposed~~ - Now using environment variables
+- **Hardcoded test IDs** - `DEFAULT_TEACHER_ID` and `DEFAULT_STUDENT_CLASS` should come from authentication
+- **Duplicate frontends** - Main app (`/src`) has full features; standalone dashboards may be redundant
+- **Email credentials in code** - ✅ Fixed: Now uses environment variables
+- **Missing authentication** - Standalone dashboards lack proper auth middleware
+- **Error handling** - Some endpoints use `throw err` instead of proper error handling
 
 ## License
 
