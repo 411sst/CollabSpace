@@ -304,26 +304,39 @@ CREATE TRIGGER update_teams_updated_at
 -- STORAGE BUCKETS
 -- =====================================================
 
--- Create storage buckets (run this in Supabase Dashboard > Storage)
--- 1. Create bucket "assignment-files" (public: false)
--- 2. Create bucket "submissions" (public: false)
--- 3. Create bucket "avatars" (public: true)
+-- IMPORTANT: Storage buckets and policies must be created in Supabase Dashboard UI
+-- SQL-based bucket creation is no longer supported in newer Supabase versions
 
--- Storage policies (run after creating buckets)
--- Allow authenticated users to upload files
-INSERT INTO storage.policies (bucket_id, name, definition)
-VALUES (
-  'assignment-files',
-  'Authenticated users can upload',
-  'bucket_id = ''assignment-files'' AND auth.role() = ''authenticated'''
-);
+-- Step 1: Create Buckets in Supabase Dashboard > Storage:
+--   1. "assignment-files" (private)
+--   2. "submissions" (private)
+--   3. "avatars" (public)
 
-INSERT INTO storage.policies (bucket_id, name, definition)
-VALUES (
-  'submissions',
-  'Team members can upload submissions',
-  'bucket_id = ''submissions'' AND auth.role() = ''authenticated'''
-);
+-- Step 2: Create Storage Policies in Dashboard > Storage > [bucket] > Policies:
+--
+-- For "assignment-files" bucket:
+--   - Policy: "Authenticated users can upload"
+--     Operation: INSERT
+--     Policy: auth.role() = 'authenticated'
+--   - Policy: "Users can read their files"
+--     Operation: SELECT
+--     Policy: auth.role() = 'authenticated'
+--
+-- For "submissions" bucket:
+--   - Policy: "Team members can upload"
+--     Operation: INSERT
+--     Policy: auth.role() = 'authenticated'
+--   - Policy: "Users can read submissions"
+--     Operation: SELECT
+--     Policy: auth.role() = 'authenticated'
+--
+-- For "avatars" bucket (public):
+--   - Policy: "Public can view avatars"
+--     Operation: SELECT
+--     Policy: true
+--   - Policy: "Users can upload own avatar"
+--     Operation: INSERT
+--     Policy: auth.uid() = bucket_id
 
 -- =====================================================
 -- CREATE DEFAULT ADMIN ACCOUNT
