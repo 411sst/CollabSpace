@@ -11,342 +11,139 @@
 
 **A no-nonsense project group maker for educational institutions.**
 
-## Overview
+## Project Status
 
-grouPES is a comprehensive web-based platform designed to streamline team formation and assignment management in educational environments. The system features three role-based dashboards (Admin, Teacher, and Student) with real-time collaboration tools, drag-and-drop group management, and automated email notifications.
+🚧 **This project is being completely reworked from scratch.**
 
-## Architecture
+The original codebase has been cleared and archived in the `backup-original-code` branch. The new implementation will feature a modern, clean architecture designed for deployment on **Vercel** or **Streamlit**.
 
-**IMPORTANT:** This repository contains TWO sets of applications:
+## What's Kept from Original
 
-### 1. Main Integrated Application (RECOMMENDED)
-**Location:** `/src` (Uses Vite)
-- **Single application** with all features integrated
-- Full authentication system with role-based routing
-- Admin, Teacher, and Student dashboards all in one app
-- Modern React with hooks and context API
-- Runs on `http://localhost:5173`
+- `DB_template.sql` - Original database schema (reference)
+- `.env.example` - Environment configuration template
+- `assets/` - Project images and mockups
 
-### 2. Standalone Dashboard Utilities
-**Location:** `admin_dash/front`, `teacher_dash/front`, `student_dash/front` (Uses Create React App)
-- **Separate simple apps** for specific administrative tasks
-- Admin Dashboard: CSV upload, password management, database reset
-- Teacher Dashboard: Assignment CRUD operations only
-- Student Dashboard: Assignment viewing only
-- Useful for testing or standalone administrative tools
-
-**For most users, you should use the Main Integrated Application in `/src`.**
-
-## Features
-
-### Admin Dashboard
-- Bulk user import via CSV (students and teachers)
-- Password management and reset functionality
-- Email notification system
-- Database management and reset tools
-- User account administration
-
-### Teacher Dashboard
-- Assignment creation and management
-- Group/team formation with drag-and-drop interface
-- Assignment distribution across classes
-- Real-time updates and notifications
-- Student performance tracking
-
-### Student Dashboard
-- Assignment viewing and submission
-- Team/group participation
-- Invitation system for group formation
-- Request management
-- Profile management
-
-## Tech Stack
+## Tech Stack (New Implementation)
 
 ### Frontend
 - **React** 18.3.1 - UI framework
 - **Vite** 5.4.0 - Build tool and dev server
 - **TailwindCSS** 3.4.14 - Utility-first CSS framework
-- **Shadcn/UI** - Component library
-- **React Router** 6.27.0 - Client-side routing
-- **React DnD** - Drag-and-drop functionality
-- **Socket.io Client** - Real-time communication
+- Ready for **Vercel** deployment
 
 ### Backend
-- **Node.js** / **Express** 4.21.1 - Server framework
-- **MySQL2** 3.11.3 - Database driver
-- **Nodemailer** 6.9.16 - Email service
-- **Passport** 0.7.0 - Authentication middleware
-- **Multer** - File upload handling
-- **Socket.io** 4.8.1 - WebSocket server
+- To be determined (options: Vercel Serverless Functions, Supabase, Firebase, or traditional Node.js API)
 
-## Project Structure
+### Database
+- Original MySQL schema available in `DB_template.sql`
+- Can be migrated to PostgreSQL, Supabase, or other cloud database
 
-```
-group-pesu/
-├── src/                          # Main application source
-│   ├── *.jsx                     # React components
-│   ├── *.module.css              # Component styles
-│   ├── *.cjs                     # Backend server files
-│   └── entry.jsx                 # Application entry point
-│
-├── admin_dash/                   # Admin dashboard
-│   ├── server.js                 # Express API (Port 3000)
-│   ├── Student.csv               # Sample student data
-│   ├── Teacher.csv               # Sample teacher data
-│   └── front/                    # React frontend
-│
-├── teacher_dash/                 # Teacher dashboard
-│   ├── server.js                 # Express API (Port 5000)
-│   └── front/                    # React frontend
-│
-├── student_dash/                 # Student dashboard
-│   ├── server.js                 # Express API (Port 3001)
-│   └── front/                    # React frontend
-│
-├── public/                       # Static assets
-├── assets/                       # Project images/mockups
-├── DB_template.sql               # Database schema
-├── package.json                  # Root dependencies
-└── vite.config.js                # Vite configuration
-```
-
-## Installation & Setup
+## Getting Started
 
 ### Prerequisites
 - Node.js 16+
-- MySQL 8.0+
 - npm or yarn
 
-### 1. Database Setup
+### Installation
 
 ```bash
-# Create the database
-mysql -u root -p
-CREATE DATABASE dbms_project;
-exit
-
-# Import the schema
-mysql -u root -p dbms_project < DB_template.sql
-```
-
-### 2. Environment Configuration
-
-**CRITICAL:** Create a `.env` file in the root directory. Copy from `.env.example`:
-
-```bash
-cp .env.example .env
-```
-
-Then edit `.env` with your actual credentials:
-
-```env
-# Database Configuration
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_actual_database_password
-DB_NAME=dbms_project
-
-# Email Configuration (Gmail App Password)
-# Generate app password: https://myaccount.google.com/apppasswords
-EMAIL_SERVICE=gmail
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASSWORD=your_gmail_app_password
-
-# Server Ports
-MAIN_PORT=3000
-ADMIN_PORT=3000
-TEACHER_PORT=5000
-STUDENT_PORT=3001
-
-# Application URLs (for CORS)
-FRONTEND_URL=http://localhost:5173
-ADMIN_FRONTEND_URL=http://localhost:3000
-TEACHER_FRONTEND_URL=http://localhost:3000
-STUDENT_FRONTEND_URL=http://localhost:3000
-
-# For testing only (remove in production with proper authentication)
-DEFAULT_TEACHER_ID=PES4UG19CS118
-DEFAULT_STUDENT_CLASS=M
-```
-
-**Important Notes:**
-- Never commit the `.env` file to version control
-- For Gmail, you need to generate an "App Password" (not your regular password)
-- Visit: https://myaccount.google.com/apppasswords to create one
-- The `.env` file is already in `.gitignore` to prevent accidental commits
-
-### 3. Install Dependencies
-
-```bash
-# Root application
+# Install dependencies
 npm install
 
-# Admin dashboard
-cd admin_dash && npm install
-cd front && npm install
-cd ../..
-
-# Teacher dashboard
-cd teacher_dash && npm install
-cd front && npm install
-cd ../..
-
-# Student dashboard
-cd student_dash && npm install
-cd front && npm install
-cd ../..
-```
-
-### 4. Running the Application
-
-#### Option A: Main Integrated Application (RECOMMENDED)
-
-This is the primary application with full authentication and all features:
-
-```bash
-# Start the Vite dev server
+# Start development server
 npm run dev
-# Runs on http://localhost:5173
-
-# In a separate terminal, start the backend
-node src/server.cjs
-# Runs on http://localhost:3000
 ```
 
-Then open your browser to `http://localhost:5173` and you'll have access to:
-- Login/Register pages
-- Admin Dashboard (`/admin` route)
-- Teacher Dashboard (`/teacher` route)
-- Student Dashboard (`/assignment` route)
-- Group Management (`/groups` route)
+### Build for Production
 
-#### Option B: Standalone Dashboard Utilities (Optional)
-
-These are simpler standalone apps for specific administrative tasks:
-
-**Admin Dashboard** (CSV upload, password management):
 ```bash
-# Terminal 1 - Backend
-cd admin_dash
-node server.js
+# Create production build
+npm run build
 
-# Terminal 2 - Frontend
-cd admin_dash/front
-npm start
+# Preview production build
+npm run preview
 ```
 
-**Teacher Dashboard** (Assignment CRUD only):
+## Deployment
+
+### Vercel (Recommended)
+
+1. Push your code to GitHub
+2. Connect repository to Vercel
+3. Vercel will auto-detect Vite configuration
+4. Deploy!
+
 ```bash
-# Terminal 1 - Backend
-cd teacher_dash
-node server.js
-
-# Terminal 2 - Frontend
-cd teacher_dash/front
-npm start
+# Or use Vercel CLI
+npm i -g vercel
+vercel
 ```
 
-**Student Dashboard** (Assignment viewing only):
+### Streamlit
+
+If using Streamlit for the frontend:
+
 ```bash
-# Terminal 1 - Backend
-cd student_dash
-node server.js
-
-# Terminal 2 - Frontend
-cd student_dash/front
-npm start
+pip install streamlit
+streamlit run app.py
 ```
 
-## API Endpoints
+## Project Structure (To Be Created)
 
-### Admin Dashboard (Port 3000)
-- `POST /upload-students` - Bulk import students via CSV
-- `POST /upload-teachers` - Bulk import teachers via CSV
-- `POST /reset-password` - Reset user password
-- `POST /send-email` - Send notification emails
-- `DELETE /reset-database` - Reset entire database
+```
+group-pesu/
+├── src/                  # Source code
+│   ├── components/       # React components
+│   ├── pages/           # Page components
+│   ├── hooks/           # Custom React hooks
+│   ├── utils/           # Utility functions
+│   ├── App.jsx          # Root component
+│   └── main.jsx         # Entry point
+├── public/              # Static assets
+├── .env.example         # Environment template
+├── index.html           # HTML entry point
+├── vite.config.js       # Vite configuration
+├── tailwind.config.js   # Tailwind configuration
+└── package.json         # Dependencies
+```
 
-### Teacher Dashboard (Port 5000)
-- `GET /assignments` - Fetch all assignments
-- `POST /assignments` - Create new assignment
-- `PUT /assignments/:id` - Update assignment
-- `DELETE /assignments/:id` - Delete assignment
-- `GET /assignments/:id/classes` - Get assignment classes
+## Original Project Reference
 
-### Student Dashboard (Port 3001)
-- `GET /assignments` - Fetch student assignments
-- `POST /groups` - Create/join group
-- `GET /invitations` - Fetch pending invitations
-- `POST /requests` - Send group request
+The original implementation is preserved in:
+- **Branch:** `backup-original-code`
+- **Features:** Multi-dashboard system with Admin, Teacher, and Student roles
+- **Database:** Full MySQL schema with Assignment, Student, Teacher tables
 
-## Database Schema
+View original code:
+```bash
+git checkout backup-original-code
+```
 
-The system uses a MySQL database with the following main tables:
+## Development Roadmap
 
-- **Admin** - Administrator accounts
-- **Student** - Student profiles and credentials
-- **Teacher** - Teacher profiles and credentials
-- **Assignment** - Assignment details
-- **AssignmentClass** - Assignment-class mappings
-- **Group** - Team/group information
-- **Invitation** - Group invitation tracking
-- **Request** - Group request management
-
-See `DB_template.sql` for complete schema details including triggers and constraints.
-
-## Development
-
-### Code Style
-- ESLint configuration included (`eslint.config.js`)
-- React components use functional components with hooks
-- CSS Modules for scoped styling
-- CommonJS (.cjs) for backend compatibility
-
-### Key Files
-- **src/AuthContext.jsx** - Authentication state management
-- **src/PrivateRoute.jsx** - Protected route wrapper
-- **src/server.cjs** - Main backend server logic
-- **vite.config.js** - Vite build configuration
-
-## Security Considerations
-
-**IMPORTANT:** Before deploying to production:
-
-1. ✅ **Environment variables implemented** - All credentials now use `.env` file
-2. **Verify .env security** - Ensure `.env` is never committed (already in .gitignore)
-3. **Remove sample data** - `Student.csv` and `Teacher.csv` contain example records
-4. **Enable HTTPS** - Configure SSL certificates for production
-5. **Update CORS settings** - Restrict allowed origins in server configurations
-6. **Remove hardcoded test IDs** - Replace `DEFAULT_TEACHER_ID` and `DEFAULT_STUDENT_CLASS` with proper authentication
-7. **Implement rate limiting** - Add middleware to prevent API abuse
-8. **Validate all user inputs** - Add proper sanitization and validation
-9. **Use secure session management** - Implement JWT or session tokens properly
-10. **Database connection pooling** - Already implemented in student_dash, consider for others
+- [ ] Set up basic React + Vite structure
+- [ ] Implement authentication system
+- [ ] Create role-based dashboards (Admin, Teacher, Student)
+- [ ] Build group/team formation features
+- [ ] Implement assignment management
+- [ ] Set up backend API (Vercel serverless or separate service)
+- [ ] Configure database (Supabase, PostgreSQL, or MySQL)
+- [ ] Deploy to Vercel
+- [ ] Add real-time features (WebSockets/Pusher)
 
 ## Contributing
 
-1. Follow the existing code structure and naming conventions
-2. Test all changes across Admin, Teacher, and Student dashboards
-3. Update this README when adding new features or changing architecture
-4. Ensure all backend servers run without errors before committing
-
-## Known Issues
-
-- ✅ ~~Database credentials exposed~~ - Now using environment variables
-- **Hardcoded test IDs** - `DEFAULT_TEACHER_ID` and `DEFAULT_STUDENT_CLASS` should come from authentication
-- **Duplicate frontends** - Main app (`/src`) has full features; standalone dashboards may be redundant
-- **Email credentials in code** - ✅ Fixed: Now uses environment variables
-- **Missing authentication** - Standalone dashboards lack proper auth middleware
-- **Error handling** - Some endpoints use `throw err` instead of proper error handling
+This is a fresh start! Feel free to contribute with modern best practices:
+- Clean, maintainable code
+- Component-based architecture
+- Proper state management
+- TypeScript (optional)
+- Testing (Jest, Vitest)
 
 ## License
 
 [Add your license information here]
 
-## Contact
-
-[Add contact information or links here]
-
 ---
 
-**Built with React, Node.js, and MySQL**
+**Previous version archived. New implementation in progress.** 🚀
