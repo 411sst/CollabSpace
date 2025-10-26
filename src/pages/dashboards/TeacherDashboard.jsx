@@ -79,33 +79,146 @@ const TeacherDashboard = () => {
   )
 }
 
-// Placeholder components
-const TeacherHome = () => (
-  <div>
-    <h1 className="section-heading">Teacher Dashboard</h1>
-    <div className="grid md:grid-cols-3 gap-6">
-      <div className="card-hover">
-        <h3 className="text-lg font-semibold mb-2 text-secondary">Active Assignments</h3>
-        <p className="text-3xl font-bold">8</p>
-        <p className="text-sm text-gray-400 mt-2">Across 3 classes</p>
+// Teacher Home Dashboard
+const TeacherHome = () => {
+  const { profile } = useAuthStore()
+  const [stats, setStats] = useState({
+    totalAssignments: 0,
+    totalTeams: 0,
+    totalStudents: 0,
+    recentAssignments: []
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchStats()
+  }, [profile])
+
+  const fetchStats = async () => {
+    if (!profile?.id) return
+
+    try {
+      setLoading(true)
+
+      // Fetch teacher's assignments with team data
+      const { data: assignments, error: assignmentsError } = await supabase
+        .from('assignments')
+        .select(`
+          *,
+          teams (
+            id,
+            team_members (
+              id,
+              status,
+              student_id
+            )
+          )
+        `)
+        .eq('teacher_id', profile.id)
+        .order('created_at', { ascending: false })
+
+      if (assignmentsError) throw assignmentsError
+
+      // Calculate statistics
+      const totalAssignments = assignments?.length || 0
+      const totalTeams = assignments?.reduce((sum, a) => sum + (a.teams?.length || 0), 0) || 0
+
+      // Get unique students
+      const studentIds = new Set()
+      assignments?.forEach(assignment => {
+        assignment.teams?.forEach(team => {
+          team.team_members
+            ?.filter(m => m.status === 'active')
+            .forEach(member => studentIds.add(member.student_id))
+        })
+      })
+
+      setStats({
+        totalAssignments,
+        totalTeams,
+        totalStudents: studentIds.size,
+        recentAssignments: assignments?.slice(0, 3) || []
+      })
+    } catch (error) {
+      console.error('Error fetching stats:', error)
+      toast.error('Failed to load dashboard statistics')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-secondary" />
       </div>
-      <div className="card-hover">
-        <h3 className="text-lg font-semibold mb-2 text-primary">Teams Formed</h3>
-        <p className="text-3xl font-bold">45</p>
-        <p className="text-sm text-gray-400 mt-2">75% completion rate</p>
+    )
+  }
+
+  return (
+    <div>
+      <h1 className="section-heading">Teacher Dashboard</h1>
+      <p className="text-gray-400 mb-6">Welcome back, {profile?.first_name}! Here's your teaching overview.</p>
+
+      <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="card-hover">
+          <Briefcase className="w-8 h-8 mb-3 text-secondary" />
+          <h3 className="text-lg font-semibold mb-2 text-gray-400">Total Assignments</h3>
+          <p className="text-3xl font-bold text-secondary">{stats.totalAssignments}</p>
+          <p className="text-sm text-gray-400 mt-2">Created by you</p>
+        </div>
+        <div className="card-hover">
+          <Users className="w-8 h-8 mb-3 text-primary" />
+          <h3 className="text-lg font-semibold mb-2 text-gray-400">Teams Formed</h3>
+          <p className="text-3xl font-bold text-primary">{stats.totalTeams}</p>
+          <p className="text-sm text-gray-400 mt-2">Across all assignments</p>
+        </div>
+        <div className="card-hover">
+          <BarChart3 className="w-8 h-8 mb-3 text-secondary" />
+          <h3 className="text-lg font-semibold mb-2 text-gray-400">Active Students</h3>
+          <p className="text-3xl font-bold text-secondary">{stats.totalStudents}</p>
+          <p className="text-sm text-gray-400 mt-2">Participating in teams</p>
+        </div>
       </div>
-      <div className="card-hover">
-        <h3 className="text-lg font-semibold mb-2 text-secondary">Pending Submissions</h3>
-        <p className="text-3xl font-bold">12</p>
-        <p className="text-sm text-gray-400 mt-2">Due this week</p>
-      </div>
+
+      {stats.recentAssignments.length > 0 && (
+        <div className="card">
+          <h2 className="text-xl font-bold mb-4 text-gradient">Recent Assignments</h2>
+          <div className="space-y-3">
+            {stats.recentAssignments.map((assignment) => (
+              <div key={assignment.id} className="flex items-center justify-between bg-dark/30 p-3 rounded-lg">
+                <div>
+                  <p className="text-gray-300 font-medium">{assignment.title}</p>
+                  <p className="text-sm text-gray-500">Sections: {assignment.sections.join(', ')}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-primary">{assignment.teams?.length || 0} teams</p>
+                  <p className="text-xs text-gray-500">{formatDate(assignment.created_at)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {stats.totalAssignments === 0 && (
+        <div className="card text-center py-12">
+          <Briefcase className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+          <p className="text-gray-400 text-lg">No assignments created yet</p>
+          <p className="text-gray-500 text-sm mt-2">Create your first assignment to get started</p>
+        </div>
+      )}
     </div>
-    <div className="card mt-6">
-      <h2 className="text-xl font-bold mb-4">Coming Soon</h2>
-      <p className="text-gray-400">Full teacher features including assignment creation, team monitoring, and student analytics are being built.</p>
-    </div>
-  </div>
-)
+  )
+}
 
 const TeacherAssignments = () => {
   const { profile } = useAuthStore()
