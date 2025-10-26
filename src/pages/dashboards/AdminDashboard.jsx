@@ -79,33 +79,166 @@ const AdminDashboard = () => {
   )
 }
 
-// Placeholder components
-const AdminHome = () => (
-  <div>
-    <h1 className="section-heading">Admin Dashboard</h1>
-    <div className="grid md:grid-cols-3 gap-6">
-      <div className="card-hover">
-        <h3 className="text-lg font-semibold mb-2 text-primary">Total Users</h3>
-        <p className="text-3xl font-bold">1,234</p>
-        <p className="text-sm text-gray-400 mt-2">+12% from last month</p>
+// Admin Home Dashboard
+const AdminHome = () => {
+  const { profile } = useAuthStore()
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalAssignments: 0,
+    totalTeams: 0,
+    usersByRole: { admin: 0, teacher: 0, student: 0 },
+    recentUsers: []
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchStats()
+  }, [])
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true)
+
+      // Fetch all data in parallel
+      const [usersRes, assignmentsRes, teamsRes] = await Promise.all([
+        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+        supabase.from('assignments').select('id'),
+        supabase.from('teams').select('id')
+      ])
+
+      if (usersRes.error) throw usersRes.error
+      if (assignmentsRes.error) throw assignmentsRes.error
+      if (teamsRes.error) throw teamsRes.error
+
+      const users = usersRes.data || []
+      const usersByRole = {
+        admin: users.filter(u => u.role === 'admin').length,
+        teacher: users.filter(u => u.role === 'teacher').length,
+        student: users.filter(u => u.role === 'student').length
+      }
+
+      setStats({
+        totalUsers: users.length,
+        totalAssignments: assignmentsRes.data?.length || 0,
+        totalTeams: teamsRes.data?.length || 0,
+        usersByRole,
+        recentUsers: users.slice(0, 5)
+      })
+    } catch (error) {
+      console.error('Error fetching stats:', error)
+      toast.error('Failed to load dashboard statistics')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  }
+
+  const getRoleBadgeClass = (role) => {
+    switch (role) {
+      case 'admin': return 'badge-primary'
+      case 'teacher': return 'badge-secondary'
+      case 'student': return 'bg-blue-500/10 text-blue-400 px-2 py-1 rounded text-xs'
+      default: return 'badge-primary'
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
-      <div className="card-hover">
-        <h3 className="text-lg font-semibold mb-2 text-secondary">Active Assignments</h3>
-        <p className="text-3xl font-bold">56</p>
-        <p className="text-sm text-gray-400 mt-2">Across all classes</p>
+    )
+  }
+
+  return (
+    <div>
+      <h1 className="section-heading">Admin Dashboard</h1>
+      <p className="text-gray-400 mb-6">Welcome back, {profile?.first_name}! Here's your system overview.</p>
+
+      <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <div className="card-hover">
+          <Users className="w-8 h-8 mb-3 text-primary" />
+          <h3 className="text-lg font-semibold mb-2 text-gray-400">Total Users</h3>
+          <p className="text-3xl font-bold text-primary">{stats.totalUsers}</p>
+          <p className="text-sm text-gray-400 mt-2">Registered accounts</p>
+        </div>
+        <div className="card-hover">
+          <Shield className="w-8 h-8 mb-3 text-primary" />
+          <h3 className="text-lg font-semibold mb-2 text-gray-400">Admins</h3>
+          <p className="text-3xl font-bold text-primary">{stats.usersByRole.admin}</p>
+          <p className="text-sm text-gray-400 mt-2">System administrators</p>
+        </div>
+        <div className="card-hover">
+          <GraduationCap className="w-8 h-8 mb-3 text-secondary" />
+          <h3 className="text-lg font-semibold mb-2 text-gray-400">Teachers</h3>
+          <p className="text-3xl font-bold text-secondary">{stats.usersByRole.teacher}</p>
+          <p className="text-sm text-gray-400 mt-2">Creating assignments</p>
+        </div>
+        <div className="card-hover">
+          <BookOpen className="w-8 h-8 mb-3 text-blue-400" />
+          <h3 className="text-lg font-semibold mb-2 text-gray-400">Students</h3>
+          <p className="text-3xl font-bold text-blue-400">{stats.usersByRole.student}</p>
+          <p className="text-sm text-gray-400 mt-2">Active learners</p>
+        </div>
       </div>
-      <div className="card-hover">
-        <h3 className="text-lg font-semibold mb-2 text-primary">Teams Formed</h3>
-        <p className="text-3xl font-bold">189</p>
-        <p className="text-sm text-gray-400 mt-2">This semester</p>
+
+      <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="card-hover">
+          <Briefcase className="w-8 h-8 mb-3 text-secondary" />
+          <h3 className="text-lg font-semibold mb-2 text-gray-400">Active Assignments</h3>
+          <p className="text-4xl font-bold text-secondary">{stats.totalAssignments}</p>
+          <p className="text-sm text-gray-400 mt-2">Across all teachers</p>
+        </div>
+        <div className="card-hover">
+          <Users className="w-8 h-8 mb-3 text-primary" />
+          <h3 className="text-lg font-semibold mb-2 text-gray-400">Teams Formed</h3>
+          <p className="text-4xl font-bold text-primary">{stats.totalTeams}</p>
+          <p className="text-sm text-gray-400 mt-2">Student collaborations</p>
+        </div>
       </div>
+
+      {stats.recentUsers.length > 0 && (
+        <div className="card">
+          <h2 className="text-xl font-bold mb-4 text-gradient">Recent Users</h2>
+          <div className="space-y-3">
+            {stats.recentUsers.map((user) => (
+              <div key={user.id} className="flex items-center justify-between bg-dark/30 p-3 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                    {user.first_name?.[0]}{user.last_name?.[0]}
+                  </div>
+                  <div>
+                    <p className="text-gray-300 font-medium">{user.first_name} {user.last_name}</p>
+                    <p className="text-sm text-gray-500">{user.email}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className={getRoleBadgeClass(user.role)}>{user.role}</span>
+                  <p className="text-xs text-gray-500 mt-1">{formatDate(user.created_at)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {stats.totalUsers === 0 && (
+        <div className="card text-center py-12">
+          <Users className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+          <p className="text-gray-400 text-lg">No users registered yet</p>
+          <p className="text-gray-500 text-sm mt-2">Users will appear here when they register</p>
+        </div>
+      )}
     </div>
-    <div className="card mt-6">
-      <h2 className="text-xl font-bold mb-4">Coming Soon</h2>
-      <p className="text-gray-400">Full admin features including user management, system analytics, and configuration are being built.</p>
-    </div>
-  </div>
-)
+  )
+}
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([])
