@@ -79,33 +79,135 @@ const StudentDashboard = () => {
   )
 }
 
-// Placeholder components
-const StudentHome = () => (
-  <div>
-    <h1 className="section-heading">Student Dashboard</h1>
-    <div className="grid md:grid-cols-3 gap-6">
-      <div className="card-hover">
-        <h3 className="text-lg font-semibold mb-2 text-primary">Active Assignments</h3>
-        <p className="text-3xl font-bold">5</p>
-        <p className="text-sm text-gray-400 mt-2">2 due this week</p>
+// Student Home Dashboard
+const StudentHome = () => {
+  const { profile } = useAuthStore()
+  const [stats, setStats] = useState({
+    activeAssignments: 0,
+    myTeams: 0,
+    pendingInvites: 0,
+    upcomingDeadlines: []
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchStats()
+  }, [profile])
+
+  const fetchStats = async () => {
+    if (!profile?.id) return
+
+    try {
+      setLoading(true)
+
+      // Fetch assignments for student's section
+      const { data: assignments, error: assignmentsError } = await supabase
+        .from('assignments')
+        .select('id, title, team_formation_deadline')
+        .contains('sections', [profile.section])
+        .gte('team_formation_deadline', new Date().toISOString())
+
+      if (assignmentsError) throw assignmentsError
+
+      // Fetch student's teams
+      const { data: teams, error: teamsError } = await supabase
+        .from('team_members')
+        .select('id, teams(id, team_name)')
+        .eq('student_id', profile.id)
+        .eq('status', 'active')
+
+      if (teamsError) throw teamsError
+
+      // Fetch pending invitations
+      const { data: invites, error: invitesError } = await supabase
+        .from('team_invitations')
+        .select('id')
+        .eq('to_student_id', profile.id)
+        .eq('status', 'pending')
+
+      if (invitesError) throw invitesError
+
+      setStats({
+        activeAssignments: assignments?.length || 0,
+        myTeams: teams?.length || 0,
+        pendingInvites: invites?.length || 0,
+        upcomingDeadlines: assignments?.slice(0, 3) || []
+      })
+    } catch (error) {
+      console.error('Error fetching stats:', error)
+      toast.error('Failed to load dashboard statistics')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
-      <div className="card-hover">
-        <h3 className="text-lg font-semibold mb-2 text-secondary">My Teams</h3>
-        <p className="text-3xl font-bold">3</p>
-        <p className="text-sm text-gray-400 mt-2">All teams formed</p>
+    )
+  }
+
+  return (
+    <div>
+      <h1 className="section-heading">Student Dashboard</h1>
+      <p className="text-gray-400 mb-6">Welcome back, {profile?.first_name}! Here's your overview.</p>
+
+      <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="card-hover">
+          <Briefcase className="w-8 h-8 mb-3 text-primary" />
+          <h3 className="text-lg font-semibold mb-2 text-gray-400">Active Assignments</h3>
+          <p className="text-3xl font-bold text-primary">{stats.activeAssignments}</p>
+          <p className="text-sm text-gray-400 mt-2">Available for your section</p>
+        </div>
+        <div className="card-hover">
+          <Users className="w-8 h-8 mb-3 text-secondary" />
+          <h3 className="text-lg font-semibold mb-2 text-gray-400">My Teams</h3>
+          <p className="text-3xl font-bold text-secondary">{stats.myTeams}</p>
+          <p className="text-sm text-gray-400 mt-2">Active collaborations</p>
+        </div>
+        <div className="card-hover">
+          <UserPlus className="w-8 h-8 mb-3 text-primary" />
+          <h3 className="text-lg font-semibold mb-2 text-gray-400">Pending Invites</h3>
+          <p className="text-3xl font-bold text-primary">{stats.pendingInvites}</p>
+          <p className="text-sm text-gray-400 mt-2">Waiting for response</p>
+        </div>
       </div>
-      <div className="card-hover">
-        <h3 className="text-lg font-semibold mb-2 text-primary">Pending Invites</h3>
-        <p className="text-3xl font-bold">2</p>
-        <p className="text-sm text-gray-400 mt-2">Respond soon</p>
-      </div>
+
+      {stats.upcomingDeadlines.length > 0 && (
+        <div className="card">
+          <h2 className="text-xl font-bold mb-4 text-gradient">Upcoming Deadlines</h2>
+          <div className="space-y-3">
+            {stats.upcomingDeadlines.map((assignment) => (
+              <div key={assignment.id} className="flex items-center justify-between bg-dark/30 p-3 rounded-lg">
+                <span className="text-gray-300">{assignment.title}</span>
+                <span className="text-sm text-primary">{formatDate(assignment.team_formation_deadline)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {stats.activeAssignments === 0 && stats.myTeams === 0 && (
+        <div className="card text-center py-12">
+          <Briefcase className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+          <p className="text-gray-400 text-lg">No active assignments yet</p>
+          <p className="text-gray-500 text-sm mt-2">Check back later for new assignments from your teachers</p>
+        </div>
+      )}
     </div>
-    <div className="card mt-6">
-      <h2 className="text-xl font-bold mb-4">Coming Soon</h2>
-      <p className="text-gray-400">Full student features including assignment viewing, team formation, and real-time chat are being built.</p>
-    </div>
-  </div>
-)
+  )
+}
 
 const StudentAssignments = () => {
   const { profile } = useAuthStore()
