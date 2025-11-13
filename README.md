@@ -152,10 +152,13 @@ npm install
 3. Wait for database to be provisioned
 
 #### Run Database Schema
-1. Copy contents of `SUPABASE_SETUP.sql`
+1. Copy contents of `database/SUPABASE_SETUP.sql`
 2. Go to Supabase Dashboard > SQL Editor
 3. Paste and run the SQL script
 4. This creates all tables, policies, and triggers
+5. Then run `database/SUPABASE_SECURITY_FIXES.sql` for additional security policies
+
+📖 **See [database/README.md](database/README.md) for detailed setup instructions**
 
 #### Create Storage Buckets
 1. Go to Supabase Dashboard > Storage
@@ -213,8 +216,21 @@ Open [http://localhost:5173](http://localhost:5173)
 ## 📁 Project Structure
 
 ```
-group-pesu/
-├── src/
+CollabSpace/
+├── 📁 database/             # Database schema and setup
+│   ├── SUPABASE_SETUP.sql
+│   ├── SUPABASE_SECURITY_FIXES.sql
+│   └── README.md            # Database setup guide
+├── 📁 docs/                 # DBMS documentation
+│   ├── ER_DIAGRAM.md
+│   ├── NORMALIZATION_ANALYSIS.md
+│   ├── SQL_SHOWCASE.md
+│   ├── DATABASE_DESIGN.md
+│   ├── RELATIONAL_ALGEBRA.md
+│   ├── TRANSACTION_MANAGEMENT.md
+│   ├── ARCHITECTURE.md
+│   └── PRESENTATION_GUIDE.md
+├── 📁 src/                  # Application source code
 │   ├── components/          # Reusable components
 │   │   └── ProtectedRoute.jsx
 │   ├── pages/
@@ -235,12 +251,12 @@ group-pesu/
 │   ├── App.jsx              # Main app component
 │   ├── main.jsx             # Entry point
 │   └── index.css            # Global styles
-├── public/                  # Static assets
-├── .env.example             # Environment template
-├── SUPABASE_SETUP.sql       # Database schema
-├── tailwind.config.js       # Tailwind configuration
-├── vite.config.js           # Vite configuration
-└── package.json             # Dependencies
+├── 📁 public/               # Static assets
+├── 📄 README.md             # Project documentation
+├── 📄 .env.example          # Environment template
+├── 📄 package.json          # Dependencies
+├── 📄 vite.config.js        # Vite configuration
+└── 📄 tailwind.config.js    # Tailwind configuration
 ```
 
 ---
@@ -408,7 +424,7 @@ npm run lint         # Run ESLint
 1. Create components in `src/components/`
 2. Add pages in `src/pages/`
 3. Update routes in `src/App.jsx`
-4. Update database schema in `SUPABASE_SETUP.sql` if needed
+4. Update database schema in `database/SUPABASE_SETUP.sql` if needed
 5. Test thoroughly before deploying
 
 ---
@@ -430,9 +446,10 @@ npm run lint         # Run ESLint
 - Verify file type is allowed
 
 ### RLS Policy Errors
-- Run `SUPABASE_SETUP.sql` completely
+- Run `database/SUPABASE_SETUP.sql` and `database/SUPABASE_SECURITY_FIXES.sql` completely
 - Check policies in Supabase Dashboard > Authentication > Policies
 - Ensure user is authenticated
+- See [database/README.md](database/README.md) for troubleshooting guide
 
 ---
 
