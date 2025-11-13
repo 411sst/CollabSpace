@@ -11,7 +11,65 @@
 
 **Collaborate Better, Achieve More Together**
 
-A modern, no-nonsense platform for educational team collaboration. Built with React, Supabase, and TailwindCSS.
+A modern educational collaboration platform demonstrating comprehensive **Database Management System (DBMS)** concepts. Built with React, Supabase PostgreSQL, and TailwindCSS.
+
+---
+
+## 📚 DBMS Course Project
+
+This project is designed as a **comprehensive demonstration** of DBMS concepts covered in a Database Management Systems course.
+
+### Database Concepts Implemented
+
+✅ **Unit 1: Database Design & E-R Model**
+- Complete Entity-Relationship model with 10 entities
+- Reduction from ER to relational schema
+- Primary keys, foreign keys, composite keys
+- Relational algebra operations
+- See [ER_DIAGRAM.md](docs/ER_DIAGRAM.md) and [RELATIONAL_ALGEBRA.md](docs/RELATIONAL_ALGEBRA.md)
+
+✅ **Unit 2: Advanced SQL Operations**
+- Complex queries with joins, subqueries, CTEs
+- Window functions (ROW_NUMBER, RANK, LAG, LEAD)
+- Views, triggers, and stored functions
+- Set operations (UNION, INTERSECT, EXCEPT)
+- Aggregate functions with GROUP BY/HAVING
+- See [SQL_SHOWCASE.md](docs/SQL_SHOWCASE.md)
+
+✅ **Unit 3: Normalization & Optimization**
+- All tables in BCNF (Boyce-Codd Normal Form)
+- Analysis of 1NF, 2NF, 3NF, BCNF for each table
+- Functional dependencies documented
+- Query optimization strategies
+- See [NORMALIZATION_ANALYSIS.md](docs/NORMALIZATION_ANALYSIS.md)
+
+✅ **Unit 4: Transactions & Concurrency**
+- ACID properties implementation
+- Transaction isolation levels
+- Row-level locking (FOR UPDATE, FOR SHARE)
+- Deadlock prevention strategies
+- Concurrency control mechanisms
+- See [TRANSACTION_MANAGEMENT.md](docs/TRANSACTION_MANAGEMENT.md)
+
+### Complete Documentation
+
+📖 **[DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md)** - Keys, constraints, triggers, functions, indexes
+📖 **[ER_DIAGRAM.md](docs/ER_DIAGRAM.md)** - Entity-Relationship model
+📖 **[SQL_SHOWCASE.md](docs/SQL_SHOWCASE.md)** - Advanced SQL queries
+📖 **[NORMALIZATION_ANALYSIS.md](docs/NORMALIZATION_ANALYSIS.md)** - Normalization analysis
+📖 **[RELATIONAL_ALGEBRA.md](docs/RELATIONAL_ALGEBRA.md)** - Relational algebra operations
+📖 **[TRANSACTION_MANAGEMENT.md](docs/TRANSACTION_MANAGEMENT.md)** - Transactions & concurrency
+📖 **[PRESENTATION_GUIDE.md](docs/PRESENTATION_GUIDE.md)** - Presentation talking points
+
+### Database Statistics
+
+- **10 Tables** with complete Row Level Security (RLS)
+- **25+ Indexes** (16 automatic + 9 custom)
+- **50+ RLS Policies** for access control
+- **2 Triggers** for automation
+- **2 Functions** for business logic
+- **3 Storage Buckets** with policies
+- **All tables in BCNF** (highest normalization)
 
 ---
 
