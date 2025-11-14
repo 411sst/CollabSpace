@@ -273,6 +273,28 @@ Try logging in with any test user:
 
 **Solution**: The script includes delays between user creations. If you still hit rate limits, increase the delay in `bulk-create-users.js` (line 154).
 
+### Warning: "Leaked Password Protection Disabled"
+
+**What it means**: Supabase can check passwords against known compromised passwords from data breaches.
+
+**Solution Options**:
+
+**Option 1 - Enable Before Creating Test Users** (Production-ready):
+1. Enable "Leaked Password Protection" in Supabase Dashboard → Authentication → Policies
+2. Update test passwords in `test_users.csv` to stronger ones (e.g., `SecureAdmin2024!Pass`)
+3. Run the bulk creation script
+
+**Option 2 - Enable After Creating Test Users** (Easier for Development):
+1. Run the bulk creation script with current passwords
+2. Enable "Leaked Password Protection" in Supabase Dashboard
+3. ⚠️ Remember to change passwords before production
+
+**Option 3 - Keep Disabled** (Development Only):
+- Only acceptable for local development
+- **Must enable** before production deployment
+
+**More Details**: See `database/SUPABASE_SECURITY_CONFIG.md`
+
 ## Customizing Test Users
 
 To add or modify test users:
@@ -293,6 +315,10 @@ To add or modify test users:
 3. ✅ **Use strong passwords** in production (not `Admin@123`!)
 4. ✅ **Delete test users** from production databases
 5. ✅ **Rotate service role key** if accidentally exposed
+6. ✅ **Enable leaked password protection** in Supabase Dashboard (see warning above)
+7. ✅ **Review security configuration** before production deployment
+
+📖 **Complete Security Guide**: See `database/SUPABASE_SECURITY_CONFIG.md` for comprehensive security setup instructions.
 
 ## Deleting Test Users
 
