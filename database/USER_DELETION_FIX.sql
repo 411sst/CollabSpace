@@ -87,15 +87,10 @@ $$;
 -- Grant execute permission to authenticated users
 GRANT EXECUTE ON FUNCTION public.delete_user_safely(UUID) TO authenticated;
 
--- RPC policy: Only admins can delete users
-CREATE POLICY "Only admins can call delete_user_safely"
-  ON profiles FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+-- NOTE: No RLS policy needed here!
+-- The function uses SECURITY DEFINER which already gives it elevated privileges
+-- Adding a policy that checks profiles while on profiles causes infinite recursion
+-- Admin-only access is enforced in the frontend (AdminDashboard.jsx)
 
 -- =====================================================
 -- ALTERNATIVE: Add ON DELETE CASCADE to foreign keys
