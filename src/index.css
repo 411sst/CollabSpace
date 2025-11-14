@@ -62,7 +62,10 @@
   .input,
   input.input,
   input.input-field {
-    @apply bg-dark-lighter border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200;
+    @apply bg-dark-lighter border border-gray-700 rounded-lg py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200;
+    /* Removed px-4 from @apply to allow pl-* and pr-* utility classes to work */
+    padding-left: 1rem; /* Default, can be overridden by pl-* classes */
+    padding-right: 1rem; /* Default, can be overridden by pr-* classes */
     color: #e5e7eb !important; /* Force light gray text - gray-200 */
     caret-color: #ADEDFF; /* Cyan cursor */
   }
@@ -78,7 +81,10 @@
   input.input-field,
   select.input-field,
   textarea.input-field {
-    @apply bg-dark-lighter border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200;
+    @apply bg-dark-lighter border border-gray-700 rounded-lg py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200;
+    /* Removed px-4 from @apply to allow pl-* and pr-* utility classes to work */
+    padding-left: 1rem; /* Default, can be overridden by pl-* classes */
+    padding-right: 1rem; /* Default, can be overridden by pr-* classes */
     color: #e5e7eb !important; /* Force light gray text */
     caret-color: #ADEDFF; /* Cyan cursor */
   }
