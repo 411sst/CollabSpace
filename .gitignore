@@ -1,5 +1,7 @@
-# Environment variables
+# Environment variables (CRITICAL - DO NOT COMMIT)
 .env
+.env.local
+.env.*.local
 
 # Logs
 logs
@@ -19,13 +21,61 @@ dist-ssr
 .vite
 *.local
 
+# Testing
+coverage
+.nyc_output
+*.lcov
+
+# Database files (local backups and dumps)
+*.sql.backup
+*.sql.bak
+*.dump
+*.sql.gz
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary and backup files
+*.tmp
+*.temp
+*~
+*.bak
+*.swp
+*.swo
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+*~
+
+# Script outputs
+script-output.txt
+bulk-users-output.log
+
+# Security - Never commit these!
+*.pem
+*.key
+*.cert
+credentials.json
+secrets.json
+service-account.json
