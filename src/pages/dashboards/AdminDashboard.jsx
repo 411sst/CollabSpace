@@ -1,6 +1,6 @@
 import { Routes, Route, Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
-import { Users, BarChart3, Settings, LogOut, Home, Plus, Edit, Trash2, X, Loader2, Search, UserPlus, Shield, GraduationCap, BookOpen } from 'lucide-react'
+import { Users, BarChart3, Settings, LogOut, Home, Plus, Edit, Trash2, X, Loader2, Search, UserPlus, Shield, GraduationCap, BookOpen, Briefcase } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
@@ -302,17 +302,23 @@ const AdminUsers = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId)
+      // Use the PostgreSQL function for safe user deletion
+      const { data, error } = await supabase
+        .rpc('delete_user_safely', { user_id: userId })
 
       if (error) throw error
+
+      // Check the function's response
+      if (data && !data.success) {
+        toast.error(data.error || 'Failed to delete user')
+        return
+      }
+
       toast.success('User deleted successfully')
       fetchUsers()
     } catch (error) {
       console.error('Error deleting user:', error)
-      toast.error('Failed to delete user')
+      toast.error(error.message || 'Failed to delete user')
     }
   }
 
