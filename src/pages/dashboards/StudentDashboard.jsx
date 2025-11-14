@@ -88,7 +88,9 @@ const StudentHome = () => {
     pendingInvites: 0,
     upcomingDeadlines: []
   })
+  const [pendingInvitations, setPendingInvitations] = useState([])
   const [loading, setLoading] = useState(true)
+  const [respondingTo, setRespondingTo] = useState(null)
 
   useEffect(() => {
     fetchStats()
@@ -118,12 +120,29 @@ const StudentHome = () => {
 
       if (teamsError) throw teamsError
 
-      // Fetch pending invitations
+      // Fetch pending invitations with details
       const { data: invites, error: invitesError } = await supabase
         .from('team_invitations')
-        .select('id')
+        .select(`
+          id,
+          created_at,
+          teams (
+            id,
+            team_name,
+            assignments (
+              id,
+              title
+            )
+          ),
+          from_student:profiles!team_invitations_from_student_id_fkey (
+            first_name,
+            last_name,
+            student_id
+          )
+        `)
         .eq('to_student_id', profile.id)
         .eq('status', 'pending')
+        .order('created_at', { ascending: false })
 
       if (invitesError) throw invitesError
 
@@ -133,6 +152,7 @@ const StudentHome = () => {
         pendingInvites: invites?.length || 0,
         upcomingDeadlines: assignments?.slice(0, 3) || []
       })
+      setPendingInvitations(invites || [])
     } catch (error) {
       console.error('Error fetching stats:', error)
       toast.error('Failed to load dashboard statistics')
@@ -148,6 +168,66 @@ const StudentHome = () => {
       hour: '2-digit',
       minute: '2-digit'
     })
+  }
+
+  const handleAcceptInvite = async (inviteId, teamId) => {
+    try {
+      setRespondingTo(inviteId)
+
+      // Update invitation status
+      const { error: updateError } = await supabase
+        .from('team_invitations')
+        .update({
+          status: 'accepted',
+          responded_at: new Date().toISOString()
+        })
+        .eq('id', inviteId)
+
+      if (updateError) throw updateError
+
+      // Add user to team
+      const { error: memberError } = await supabase
+        .from('team_members')
+        .insert([{
+          team_id: teamId,
+          student_id: profile.id,
+          status: 'active'
+        }])
+
+      if (memberError) throw memberError
+
+      toast.success('Invitation accepted! You are now part of the team.')
+      fetchStats() // Refresh data
+    } catch (error) {
+      console.error('Error accepting invitation:', error)
+      toast.error(error.message || 'Failed to accept invitation')
+    } finally {
+      setRespondingTo(null)
+    }
+  }
+
+  const handleRejectInvite = async (inviteId) => {
+    try {
+      setRespondingTo(inviteId)
+
+      const { error } = await supabase
+        .from('team_invitations')
+        .update({
+          status: 'rejected',
+          responded_at: new Date().toISOString()
+        })
+        .eq('id', inviteId)
+
+      if (error) throw error
+
+      toast.success('Invitation rejected')
+      fetchStats() // Refresh data
+    } catch (error) {
+      console.error('Error rejecting invitation:', error)
+      toast.error(error.message || 'Failed to reject invitation')
+    } finally {
+      setRespondingTo(null)
+    }
   }
 
   if (loading) {
@@ -183,6 +263,58 @@ const StudentHome = () => {
           <p className="text-sm text-gray-400 mt-2">Waiting for response</p>
         </div>
       </div>
+
+      {pendingInvitations.length > 0 && (
+        <div className="card mb-6">
+          <h2 className="text-xl font-bold mb-4 text-gradient">Pending Invitations</h2>
+          <div className="space-y-4">
+            {pendingInvitations.map((invite) => (
+              <div key={invite.id} className="bg-dark/30 p-4 rounded-lg border border-gray-800">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-primary mb-1">
+                      {invite.teams?.team_name}
+                    </h3>
+                    <p className="text-sm text-gray-400 mb-2">
+                      Assignment: {invite.teams?.assignments?.title}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Invited by: {invite.from_student?.first_name} {invite.from_student?.last_name} ({invite.from_student?.student_id})
+                    </p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      {formatDate(invite.created_at)}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleAcceptInvite(invite.id, invite.teams?.id)}
+                      disabled={respondingTo === invite.id}
+                      className="btn-primary px-4 py-2 text-sm"
+                    >
+                      {respondingTo === invite.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        'Accept'
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleRejectInvite(invite.id)}
+                      disabled={respondingTo === invite.id}
+                      className="btn-ghost px-4 py-2 text-sm text-red-400 hover:bg-red-400/10"
+                    >
+                      {respondingTo === invite.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        'Reject'
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {stats.upcomingDeadlines.length > 0 && (
         <div className="card">
@@ -351,6 +483,13 @@ const StudentTeams = () => {
   const [teamName, setTeamName] = useState('')
   const [creating, setCreating] = useState(false)
 
+  // Invite modal state
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [selectedTeamForInvite, setSelectedTeamForInvite] = useState(null)
+  const [availableStudents, setAvailableStudents] = useState([])
+  const [selectedStudent, setSelectedStudent] = useState(null)
+  const [inviting, setInviting] = useState(false)
+
   useEffect(() => {
     fetchTeamsAndAssignments()
   }, [profile])
@@ -464,6 +603,79 @@ const StudentTeams = () => {
     }
   }
 
+  const handleOpenInviteModal = async (team) => {
+    setSelectedTeamForInvite(team)
+    setShowInviteModal(true)
+
+    try {
+      // Get current team member IDs
+      const currentMemberIds = team.team_members
+        ?.filter(m => m.status === 'active')
+        .map(m => m.student_id) || []
+
+      // Get pending invitation IDs
+      const { data: pendingInvites } = await supabase
+        .from('team_invitations')
+        .select('to_student_id')
+        .eq('team_id', team.id)
+        .eq('status', 'pending')
+
+      const pendingInviteIds = pendingInvites?.map(i => i.to_student_id) || []
+
+      // Fetch students from same section who are not in the team and don't have pending invites
+      const { data: students, error } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, student_id')
+        .eq('role', 'student')
+        .eq('section', profile.section)
+        .not('id', 'in', `(${[...currentMemberIds, ...pendingInviteIds, profile.id].join(',')})`)
+
+      if (error) throw error
+
+      setAvailableStudents(students || [])
+    } catch (error) {
+      console.error('Error fetching students:', error)
+      toast.error('Failed to load students')
+    }
+  }
+
+  const handleSendInvite = async () => {
+    if (!selectedStudent || !selectedTeamForInvite) {
+      toast.error('Please select a student')
+      return
+    }
+
+    try {
+      setInviting(true)
+
+      const { error } = await supabase
+        .from('team_invitations')
+        .insert([{
+          team_id: selectedTeamForInvite.id,
+          from_student_id: profile.id,
+          to_student_id: selectedStudent,
+          status: 'pending'
+        }])
+
+      if (error) throw error
+
+      toast.success('Invitation sent successfully!')
+      setShowInviteModal(false)
+      setSelectedStudent(null)
+      setSelectedTeamForInvite(null)
+    } catch (error) {
+      console.error('Error sending invitation:', error)
+
+      if (error.code === '23505' || error.message.includes('duplicate key')) {
+        toast.error('Invitation already sent to this student')
+      } else {
+        toast.error(error.message || 'Failed to send invitation')
+      }
+    } finally {
+      setInviting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -524,6 +736,17 @@ const StudentTeams = () => {
                         </div>
                       ))}
                   </div>
+
+                  {/* Invite button - only show if user is team creator */}
+                  {team.created_by === profile.id && (
+                    <button
+                      onClick={() => handleOpenInviteModal(team)}
+                      className="btn-ghost w-full mt-4 flex items-center justify-center gap-2"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Invite Member
+                    </button>
+                  )}
                 </div>
               </div>
             )
@@ -597,6 +820,73 @@ const StudentTeams = () => {
                   </>
                 ) : (
                   'Create Team'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invite Member Modal */}
+      {showInviteModal && selectedTeamForInvite && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="card max-w-md w-full">
+            <h2 className="text-2xl font-bold mb-4 text-gradient">Invite Member</h2>
+            <p className="text-gray-400 mb-4">Team: {selectedTeamForInvite.team_name}</p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Select Student
+                </label>
+                {availableStudents.length === 0 ? (
+                  <p className="text-sm text-gray-500 p-4 bg-dark/30 rounded">
+                    No students available to invite. All students from your section are either already in the team or have pending invitations.
+                  </p>
+                ) : (
+                  <select
+                    value={selectedStudent || ''}
+                    onChange={(e) => setSelectedStudent(e.target.value)}
+                    className="input-field w-full"
+                  >
+                    <option value="">Choose a student...</option>
+                    {availableStudents.map((student) => (
+                      <option key={student.id} value={student.id}>
+                        {student.first_name} {student.last_name} ({student.student_id})
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowInviteModal(false)
+                  setSelectedStudent(null)
+                  setSelectedTeamForInvite(null)
+                }}
+                className="btn-ghost flex-1"
+                disabled={inviting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendInvite}
+                disabled={inviting || !selectedStudent || availableStudents.length === 0}
+                className="btn-primary flex-1 flex items-center justify-center gap-2"
+              >
+                {inviting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Send Invite
+                  </>
                 )}
               </button>
             </div>
