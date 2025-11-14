@@ -508,6 +508,7 @@ const StudentTeams = () => {
           teams (
             id,
             team_name,
+            created_by,
             created_at,
             assignment_id,
             assignments (
