@@ -452,7 +452,13 @@ const StudentTeams = () => {
       fetchTeamsAndAssignments()
     } catch (error) {
       console.error('Error creating team:', error)
-      toast.error(error.message || 'Failed to create team')
+
+      // Handle specific error cases
+      if (error.code === '23505' || error.message.includes('duplicate key')) {
+        toast.error('A team with this name already exists for this assignment. Please choose a different name.')
+      } else {
+        toast.error(error.message || 'Failed to create team')
+      }
     } finally {
       setCreating(false)
     }
