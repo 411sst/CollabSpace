@@ -623,17 +623,27 @@ const StudentTeams = () => {
 
       const pendingInviteIds = pendingInvites?.map(i => i.to_student_id) || []
 
-      // Fetch students from same section who are not in the team and don't have pending invites
-      const { data: students, error } = await supabase
+      // Build exclusion list
+      const excludedIds = [...currentMemberIds, ...pendingInviteIds, profile.id]
+
+      // Fetch all students from same section
+      const { data: allStudents, error } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, student_id')
         .eq('role', 'student')
         .eq('section', profile.section)
-        .not('id', 'in', `(${[...currentMemberIds, ...pendingInviteIds, profile.id].join(',')})`)
 
       if (error) throw error
 
-      setAvailableStudents(students || [])
+      // Filter out excluded students in JavaScript
+      const students = allStudents?.filter(s => !excludedIds.includes(s.id)) || []
+
+      console.log('Section:', profile.section)
+      console.log('All students in section:', allStudents?.length)
+      console.log('Available to invite:', students.length)
+      console.log('Excluded IDs:', excludedIds)
+
+      setAvailableStudents(students)
     } catch (error) {
       console.error('Error fetching students:', error)
       toast.error('Failed to load students')
