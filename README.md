@@ -19,7 +19,6 @@ A modern educational collaboration platform demonstrating comprehensive **Databa
 
 This project is designed as a **comprehensive demonstration** of DBMS concepts covered in a Database Management Systems course.
 
-
 ### Database Concepts Implemented
 
 ✅ **Unit 1: Database Design & E-R Model**
