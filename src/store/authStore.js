@@ -106,7 +106,8 @@ export const useAuthStore = create(
       name: 'collab-auth-storage',
       partialize: (state) => ({
         user: state.user,
-        session: state.session
+        session: state.session,
+        profile: state.profile  // Add profile to persisted state
       })
     }
   )

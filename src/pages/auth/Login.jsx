@@ -31,14 +31,22 @@ const Login = () => {
       toast.success('Welcome back!')
 
       // Redirect to intended page or role dashboard
+      // Wait for profile to be fully loaded
       setTimeout(() => {
+        const currentProfile = useAuthStore.getState().profile
+
         if (from) {
-          navigate(from)
+          navigate(from, { replace: true })
+        } else if (currentProfile?.role) {
+          navigate(`/${currentProfile.role}`, { replace: true })
         } else {
-          const role = useAuthStore.getState().profile?.role
-          navigate(role ? `/${role}` : '/')
+          // Profile not loaded yet, try one more time
+          setTimeout(() => {
+            const retryProfile = useAuthStore.getState().profile
+            navigate(retryProfile?.role ? `/${retryProfile.role}` : '/', { replace: true })
+          }, 500)
         }
-      }, 500)
+      }, 700)
     } catch (error) {
       toast.error('An unexpected error occurred')
     } finally {
