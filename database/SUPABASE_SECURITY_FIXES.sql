@@ -44,6 +44,7 @@ $$;
 -- =====================================================
 
 -- Assignment Phases Policies
+DROP POLICY IF EXISTS "Students can view phases for their assignments" ON assignment_phases;
 CREATE POLICY "Students can view phases for their assignments"
   ON assignment_phases FOR SELECT
   USING (
@@ -55,6 +56,7 @@ CREATE POLICY "Students can view phases for their assignments"
     )
   );
 
+DROP POLICY IF EXISTS "Teachers can manage their assignment phases" ON assignment_phases;
 CREATE POLICY "Teachers can manage their assignment phases"
   ON assignment_phases FOR ALL
   USING (
@@ -66,6 +68,7 @@ CREATE POLICY "Teachers can manage their assignment phases"
   );
 
 -- Files Policies
+DROP POLICY IF EXISTS "Users can view files" ON files;
 CREATE POLICY "Users can view files"
   ON files FOR SELECT
   USING (
@@ -92,6 +95,7 @@ CREATE POLICY "Users can view files"
     )
   );
 
+DROP POLICY IF EXISTS "Teachers can upload instruction files" ON files;
 CREATE POLICY "Teachers can upload instruction files"
   ON files FOR INSERT
   WITH CHECK (
@@ -103,6 +107,7 @@ CREATE POLICY "Teachers can upload instruction files"
     )
   );
 
+DROP POLICY IF EXISTS "Students can upload submission files" ON files;
 CREATE POLICY "Students can upload submission files"
   ON files FOR INSERT
   WITH CHECK (
@@ -117,6 +122,7 @@ CREATE POLICY "Students can upload submission files"
   );
 
 -- Submissions Policies
+DROP POLICY IF EXISTS "Team members can view their submissions" ON submissions;
 CREATE POLICY "Team members can view their submissions"
   ON submissions FOR SELECT
   USING (
@@ -135,6 +141,7 @@ CREATE POLICY "Team members can view their submissions"
     )
   );
 
+DROP POLICY IF EXISTS "Team members can submit" ON submissions;
 CREATE POLICY "Team members can submit"
   ON submissions FOR INSERT
   WITH CHECK (
@@ -146,6 +153,7 @@ CREATE POLICY "Team members can submit"
     )
   );
 
+DROP POLICY IF EXISTS "Teachers can grade submissions" ON submissions;
 CREATE POLICY "Teachers can grade submissions"
   ON submissions FOR UPDATE
   USING (
@@ -158,10 +166,12 @@ CREATE POLICY "Teachers can grade submissions"
   );
 
 -- Team Invitations Policies
+DROP POLICY IF EXISTS "Students can view invitations sent to them" ON team_invitations;
 CREATE POLICY "Students can view invitations sent to them"
   ON team_invitations FOR SELECT
   USING (to_student_id = auth.uid() OR from_student_id = auth.uid());
 
+DROP POLICY IF EXISTS "Students can send invitations" ON team_invitations;
 CREATE POLICY "Students can send invitations"
   ON team_invitations FOR INSERT
   WITH CHECK (
@@ -174,6 +184,7 @@ CREATE POLICY "Students can send invitations"
     )
   );
 
+DROP POLICY IF EXISTS "Students can respond to their invitations" ON team_invitations;
 CREATE POLICY "Students can respond to their invitations"
   ON team_invitations FOR UPDATE
   USING (to_student_id = auth.uid());
